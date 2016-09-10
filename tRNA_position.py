@@ -116,3 +116,34 @@ def count_positions(input_file, positions):
 def calculate_positional_entropy(position):
   return sum(-count / position.num_obs * log2(count / position.num_obs) for count in position.counts.values())
 
+def position_generator(positions, threshold=0.98):
+  for position in positions: # iterate through positions
+    if position.paired:
+      combos = [{'A:U': ['A:U'], 'U:A': ['U:A'], 'G:C': ['G:C'], 'C:G': ['C:G'], 'G:U': ['G:U'], 'U:G': ['U:G'], 'A:A': ['A:A'], 'C:C': ['C:C'], 'G:G': ['G:G'], 'U:U': ['U:U'], 'A:G': ['A:G'], 'G:A': ['G:A'], 'A:C': ['A:C'], 'C:A': ['C:A'], 'C:U': ['C:U'], 'U:C': ['U:C']},
+                {'R:Y': ['G:C', 'A:U'], 'Y:R': ['C:G', 'U:A'], 'S:S': ['G:C', 'C:G'], 'W:W': ['A:U', 'U:A'], 'W:O': ['G:U', 'U:G']},
+                {'B:V': ['G:C', 'C:G', 'U:A'], 'V:B': ['G:C', 'C:G', 'A:U'], 'D:H': ['A:U', 'U:A', 'G:C'], 'H:D': ['A:U', 'U:A', 'C:G']},
+                {'W:C': ['A:U', 'U:A', 'G:C', 'C:G']},
+                {'G:N': ['G:C', 'G:U', 'C:G', 'U:G'], 'U:N': ['U:G', 'U:A', 'A:U', 'G:U']},
+                {'C:O': ['A:U', 'U:A', 'G:C', 'C:G', 'G:U', 'U:G']},
+                {'Y:Y': ['U:C', 'C:U', 'U:U', 'C:C'], 'R:R': ['A:G', 'G:A', 'A:A', 'G:G']},
+                {'M:M': ['A:A', 'G:G', 'C:C', 'U:U', 'A:G', 'A:C', 'C:A', 'C:U', 'G:A', 'U:C']}]
+    else: 
+      combos = [{'A': ['A'], 'C': ['C'], 'G': ['G'], 'U': ['U']},
+                {'R': ['A', 'G'], 'Y': ['C', 'U'], 'K': ['G', 'U'], 'M': ['A', 'C'], 'S': ['G', 'C'], 'W': ['A', 'U']},
+                {'B': ['C', 'G', 'U'], 'D': ['G', 'A', 'U'], 'H': ['A', 'C', 'U'], 'V': ['G', 'C', 'A']}]
+      # Single base combinations. Three dictionaries, organized by rank.
+    max_freq = 0
+    best_symbol = ''
+    for rank_dict in combos:
+      # Each dictionary contains symbols (keys) and possible bases or base pairs the symbol resolves to (values).
+      # Check which symbol has the highest frequency.
+      for symbol, bases in rank_dict.items():
+        freq = sum([position.counts[base] for base in bases]) / sum(position.counts.values())
+        if max_freq < freq:
+          max_freq = freq
+          best_symbol = symbol
+      if max_freq > threshold:
+        yield position, best_symbol, max_freq
+        break
+    if max_freq < threshold:
+      yield position, best_symbol, max_freq
