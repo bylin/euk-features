@@ -138,10 +138,10 @@ def position_generator(positions, threshold=0.98):
       # Each dictionary contains symbols (keys) and possible bases or base pairs the symbol resolves to (values).
       # Check which symbol has the highest frequency.
       for symbol, bases in rank_dict.items():
-        freqs = [position.counts[base] for base in bases]
+        freqs = [position.counts[base] / sum(position.counts.values()) for base in bases]
         # Each possible base/bp needs to occur in at least 2% of tRNAs
-        if any(freqs) < sum(position.counts.values()) * 0.02: continue
-        freq = sum(freqs) / sum(position.counts.values())
+        if any(f < 0.02 for f in freqs): continue
+        freq = sum(freqs)
         if max_freq < freq:
           max_freq = freq
           best_symbol = symbol
