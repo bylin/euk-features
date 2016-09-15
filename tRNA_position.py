@@ -42,29 +42,42 @@ class Region:
     return "Region {} ({} ~ {})".format(self.name, self.lower, self.upper)
 
 def annotate_positions(ss):
-  loop_indices = [r.span() for r in re.finditer('\(+|<+|_+|>+|\)+', ss)]
+
+  loop_indices = []
+  # We want to be able to track stem-loop insertions, but the regular expression will also pick up "interregion" stretches
+  # so, we need to remove "interregion" stretches
+  for i, indices in enumerate([r.span() for r in re.finditer('([\(\.]+\()|(<[<\.]+<)|[_\.]+|>[>\.]+>|\)[\)\.]+', ss)]):
+    left, right = indices
+    if re.search('[\(<_>\)]', ss[left:right]): loop_indices.append(indices)
   if len(loop_indices) == 14: regions = ['acceptor', 'dstem', 'dloop', 'dstem', 'acstem', 'acloop', 'acstem', 'vstem', 'vloop', 'vstem', 'tpcstem', 'tpcloop', 'tpcstem', 'acstem']
   elif len(loop_indices) == 11: regions = ['acceptor', 'dstem', 'dloop', 'dstem', 'acstem', 'acloop', 'acstem', 'tpcstem', 'tpcloop', 'tpcstem', 'acstem']
   regions = [Region(indices[0], indices[1], name) for indices, name in zip(loop_indices, regions[:])]
   region = regions[0]
   positions = []
   region_index = 0 # index to be used to iterate through regions list
+  insert_index = 0 # tracks base insertions
   region_numbering = 0 # base numbering within a region
+  reverse_bp_index = 1 # number of bases to backtrack when trying to match a base
   for position in range(len(ss)):
     if region_index < len(regions):
       region = regions[region_index]
     else:
-      positions.append(Position(position=str(position + 1), region='single', region_number=region_numbering + 1, index=len(positions), paired=False))
+      positions.append(Position(position=str(position + 1), region='inter', region_number=region_numbering + 1, index=len(positions), paired=False))
       continue
-    if position < region.lower: # before the next region starts (or if it's the last region), annotate as single bases
-      positions.append(Position(position=str(position + 1), region='single', region_number=region_numbering + 1, index=len(positions), paired=False))
+    if ss[position] == '.':
+      insert_index += 1
+      positions.append(Position(position=str(position + 1), region='insertion', region_number=insert_index, index=len(positions), paired=False))
+    elif position < region.lower: # before the next region starts (or if it's the last region), annotate as single bases
+      positions.append(Position(position=str(position + 1), region='inter', region_number=region_numbering + 1, index=len(positions), paired=False))
       region_numbering += 1
     elif position == region.lower: # start of region: begin region numbering at 1
       if ss[position] == "(":
-        paired_base = regions[-1].upper - 1
+        while ss[regions[-1].upper - reverse_bp_index] == ".": reverse_bp_index += 1
+        paired_base = regions[-1].upper - reverse_bp_index
         positions.append(Position(position='{}:{}'.format(position + 1, paired_base + 1), region=region.name, region_number=1, index=len(positions), paired=True))
       elif ss[position] == "<":
-        paired_base = regions[region_index + 2].upper - 1
+        while ss[regions[region_index + 2].upper - reverse_bp_index] == '.': reverse_bp_index += 1
+        paired_base = regions[region_index + 2].upper - reverse_bp_index
         positions.append(Position(position='{}:{}'.format(position + 1, paired_base + 1), region=region.name, region_number=1, index=len(positions), paired=True))
       elif ss[position] in [')', '>']:
         pass
@@ -74,10 +87,12 @@ def annotate_positions(ss):
     elif position > region.lower and position <= region.upper - 1: # inside region: increment region numbering normally
       # find paired base, or skip if base is the opposite strand
       if ss[position] == "(":
-        paired_base = regions[-1].upper - (position - regions[0].lower) - 1
+        while ss[regions[-1].upper - (position - regions[0].lower) - reverse_bp_index] == ".": reverse_bp_index += 1
+        paired_base = regions[-1].upper - (position - regions[0].lower) - reverse_bp_index
         positions.append(Position(position='{}:{}'.format(position + 1, paired_base + 1), region=region.name, region_number=region_numbering + 1, index=len(positions), paired=True))
       elif ss[position] == "<":
-        paired_base = regions[region_index + 2].upper - region_numbering - 1
+        while ss[regions[region_index + 2].upper - region_numbering - reverse_bp_index] == ".": reverse_bp_index += 1
+        paired_base = regions[region_index + 2].upper - region_numbering - reverse_bp_index
         positions.append(Position(position='{}:{}'.format(position + 1, paired_base + 1), region=region.name, region_number=region_numbering + 1, index=len(positions), paired=True))
       elif ss[position] in [')', '>']:
         pass
@@ -87,7 +102,8 @@ def annotate_positions(ss):
     if position == region.upper - 1: # end of region, reset region index and increment region number
       region_index += 1
       region_numbering = 0
-    
+      reverse_bp_index = 1
+      insert_index = 0
   return positions
 
 def count_positions(input_file, positions):
