@@ -96,6 +96,8 @@ def annotate_positions(ss):
           pass
         else:
           positions.append(Position(position=str(position + 1), sprinzl=sprinzl_positions[sprinzl_index], index=len(positions), paired=False))
+      else: # should be the last one; last two bases in the alignment are always '):'
+        positions.append(Position(position=position + 1, sprinzl='73', index=len(positions), paired=False))
       sprinzl_index += 1
       sprinzl_insert_index = 0
       region_numbering += 1
