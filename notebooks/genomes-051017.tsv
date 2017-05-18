@@ -1,4 +1,4 @@
-ashbGoss_ATCC10895	Ashbya gossypii ATCC 10895	eukaryota	Fungi	33169
+ashbGoss_ATCC10895	Eremothecium gossypii ATCC 10895	eukaryota	Fungi	33169
 aspeFumi_AF293	Aspergillus fumigatus Af293	eukaryota	Fungi	746128
 aspeNidu_FGSC_A4	Aspergillus nidulans FGSC A4	eukaryota	Fungi	162425
 aspeOryz_RIB40	Aspergillus oryzae RIB40	eukaryota	Fungi	5062
@@ -34,7 +34,7 @@ lachKluy_NRRL_Y_12651	Lachancea kluyveri NRRL Y-12651	eukaryota	Fungi	4934
 lachTher_CBS_6340	Lachancea thermotolerans CBS 6340	eukaryota	Fungi	381046
 magnOryz_70_15	Magnaporthe oryzae 70-15	eukaryota	Fungi	318829
 millFari_CBS_7064	Millerozyma farinosa CBS 7064	eukaryota	Fungi	4920
-myceTher_ATCC42464	Myceliophthora thermophila ATCC 42464	eukaryota	Fungi	78579
+myceTher_ATCC42464	Thermothelomyces thermophila ATCC 42464	eukaryota	Fungi	78579
 naumCast_CBS_4309	Naumovozyma castellii CBS 4309	eukaryota	Fungi	27288
 naumDair_CBS_421	Naumovozyma dairenensis CBS 421	eukaryota	Fungi	1071378
 neurCras_OR74A	Neurospora crassa OR74A	eukaryota	Fungi	5141
