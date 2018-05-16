@@ -47,10 +47,11 @@
 		Physcomitrella patens (red algae, basal plant)
 	Removed Danio rerio
 
-
-Removed during filtering
-	Papio hamadryas (missing file)
-	Petromyzon marinus (Lamprey) (missing file)
+5/14/18
+	Removed Papio hamadryas due to missing file (was removed during filtering anyway)
+	Added files to match Petromyzon marinus (Lamprey)
+	Updated assemblies for gorilla, mouse lemur, pig, corn, chicken, turkey, frog
+	Revert brachypodium to older assembly
 
 2/16/18	6/15/17	5/10/17	genome_table+
 		aedAeg1	
