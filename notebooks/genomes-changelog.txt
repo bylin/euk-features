@@ -49,7 +49,6 @@
 
 5/14/18
 	Removed Papio hamadryas due to missing file (was removed during filtering anyway)
-	Added files to match Petromyzon marinus (Lamprey)
 	Updated assemblies for gorilla, mouse lemur, pig, corn, chicken, turkey, frog
 	Revert brachypodium to older assembly
 
