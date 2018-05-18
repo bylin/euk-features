@@ -1,14 +1,15 @@
 import re
-from collections import Counter
+from collections import Counter, OrderedDict
 from math import log2
 
 def get_positions(input_file):
   alignment_fhandle = open(input_file)
   positions = [] # list containing each position in the tRNA
   # first, get secondary structure
+  ss = ''
   for line in alignment_fhandle:
     if line[0:12] == '#=GC SS_cons':
-      ss = line.strip().split()[-1]
+      ss += line.strip().split()[-1]
   # parse secondary structure into regions and positions
   positions = annotate_positions(ss)
   # get counts for each position by parsing Stockholm file
@@ -114,12 +115,19 @@ def annotate_positions(ss):
 
 def count_positions(input_file, positions):
   # We've now annotated all of the positions. Time to count bases at each position.
-  # Loop through all sequences in alignment
+
+  # Handle split alignments in stockholm files
+  alignment_lines = defaultdict(str) # use an ordered dict to keep lines in the same order
   alignment_fhandle = open(input_file) # refresh handle
   for line in alignment_fhandle:
     if line[0] in ["#", '\n', '/']: continue
     if len(line.split()) == 1: print(line)
     seqname, seq = line.strip().split()
+    alignment_lines[seqname] += seq
+  
+  # Loop through all sequences in alignment
+  for seqname in alignment_lines:
+    seq = alignment_lines[seqname]
     for position_index, position in enumerate(positions):
       if position.paired:
         index1, index2 = position.position.split(':')
@@ -172,3 +180,30 @@ def position_generator(positions, threshold=0.98):
         break
     if max_freq < threshold:
       yield position, best_symbol, max_freq
+
+def parse_stockholm(alignment_file):
+  lines = []
+  ss_cons = ''
+  rf = ''
+  ordered_seqs = OrderedDict() # use ordered dict as an ordered set
+  seqs = defaultdict(str)
+  scores = defaultdict(str)
+  for line in open(alignment_file):
+    if line[0] == '\n' or line[0:4] in ['# ST', '#=GF', '#=GS']:
+      lines.append(line)
+    elif line == '//\n': continue
+    elif line[0:7] == '#=GC SS':
+      ss_cons += line.strip().split()[2]
+      gaplength = line.count(' ') + 6
+    elif line[0:7] == '#=GC RF':
+      rf += line.strip().split()[2]
+    # else, column is either nucleotide or score line for a sequence
+    else:
+      cols = line.strip().split()
+      if cols[0] == "#=GR":
+        scores[cols[1]] += cols[3]
+      else:
+        ordered_seqs[cols[0]] = ''
+        seqs[cols[0]] += cols[1]
+  return(lines, ss_cons, rf)
+
